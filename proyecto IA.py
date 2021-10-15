@@ -69,7 +69,6 @@ def ancestros(arbol, elemento):
         ancestros(arbol, nodo.elemento)
 
 #Matriz del laberinto
-#esto
 #---------------
 #0 Casilla vacia
 #1 Mononoke
