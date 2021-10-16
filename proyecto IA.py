@@ -106,26 +106,65 @@ def mover(tortuga):
         tortuga.goto(camino[len(camino)-1-i])
 
 #ia mononoke
+#cambie todo por tablero
 def iaCosto(mononoke,x,y,contador):
 
     costo = 0
     if contador == 0:
             tree = Arbol((costo,posiciones[x][y]))  
             
-    if posiciones[x][y] == 4:
+    if tablero[x][y] == 4:
         #padre = buscarPadre(arbol, elemento)
         #elemento = buscarSubarbol(tree,posiciones[x][y])
         
-        mover(mononoke)
+        #mover(mononoke)
+        #Imprimir matriz recorrido
         tkinter.messagebox.showinfo(message="ENCONTRÓ LA META", title="FIN")
-      
-    if x+1 < 4:
+
+    #abajo  
+    if tablero[x+1][y] != 5 and 4 > x+1:
+        #movimiento posible, agregue a la cola
+        #analizar
+        """
         if posiciones[x+1][y] == (0 or 1 or 3 or 4):
             costo += 1
         if posiciones[x+1][y] == 2:
             costo += 3    
+        """
+        if tablero[x+1][y] == 2:
+            costo+=2
+        else:
+            costo+1
+        #analizar
+        """    
         agregarElemento(tree,(costo,posiciones[x+1][y]),posiciones[x][y])
+        """
 
+    #derecha            
+    if tablero[x][y+1] != 5 and 4 > y+1:
+        #movimiento posible, agregue a la cola
+        if tablero[x-1][y+1] == 2:
+            costo+=2
+        else:
+            costo+1   
+
+    #arriba    
+    if tablero[x-1][y] != 5 and x-1 > 0:
+        #movimiento posible, agregue a la cola
+        if tablero[x-1][y] == 2:
+            costo+=2
+        else:
+            costo+1 
+
+    #izquierda
+    if tablero[x][y-1] != 5 and y-1 > 0:
+        #movimiento posible, agregue a la cola
+        if tablero[x][y-1] == 2:
+            costo+=2
+        else:
+            costo+1
+
+    #Ejecutar funcion de costo
 
 #Dibujar mononoke
 
@@ -233,7 +272,7 @@ print((buscarPadre(arbol,marge,None)))
 print((buscarPadre(arbol,abuela,None)))
 """""
 
-ancestros(arbol,bart)
+ancestros(arbol,ling)
 for i in range (len(recorrido)):
     print(recorrido[i])
 turtle.done()
