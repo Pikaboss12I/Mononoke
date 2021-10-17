@@ -47,7 +47,6 @@ def buscarSubarbol(arbol, elemento):
             return arbolBuscado
     return None   
 
-
 def buscarPadre(arbol, hijo, padre):
     if arbol.elemento == hijo:
         return padre
@@ -90,7 +89,6 @@ posiciones = [[pos1,pos2,pos3,pos4,pos5],
 kodamas = []
 arboles = []
 yakult = turtle.Turtle()
-camino = []
 recorrido = []
 
 #Fondo cargado con la imagen base del laberinto
@@ -100,45 +98,36 @@ screen.setup(1085,1000)
 screen.bgpic('fondo2.gif')
 
 # Mover
-
 def mover(tortuga):
-    for i in range(len(camino)-1):
-        tortuga.goto(camino[len(camino)-1-i])
+    for i in range(len(recorrido)-1):
+        tortuga.goto(recorrido[len(recorrido)-1-i])
 
 #ia mononoke
-#cambie todo por tablero
 def iaCosto(mononoke,x,y,contador):
 
     costo = 0
     if contador == 0:
-            tree = Arbol((costo,posiciones[x][y]))  
+        tree = Arbol((costo,posiciones[x][y]))
+        contador +=1
             
     if tablero[x][y] == 4:
-        #padre = buscarPadre(arbol, elemento)
-        #elemento = buscarSubarbol(tree,posiciones[x][y])
-        
+        #llenar matriz del recorrido
         #mover(mononoke)
-        #Imprimir matriz recorrido
         tkinter.messagebox.showinfo(message="ENCONTRÓ LA META", title="FIN")
+    
+    #Paso por venado
+    if tablero[x][y] == 3:
+        contador+=1
 
     #abajo  
     if tablero[x+1][y] != 5 and 4 > x+1:
         #movimiento posible, agregue a la cola
         #analizar
-        """
-        if posiciones[x+1][y] == (0 or 1 or 3 or 4):
-            costo += 1
-        if posiciones[x+1][y] == 2:
-            costo += 3    
-        """
-        if tablero[x+1][y] == 2:
+        if tablero[x+1][y] == 2 and contador<2:
             costo+=2
         else:
             costo+1
         #analizar
-        """    
-        agregarElemento(tree,(costo,posiciones[x+1][y]),posiciones[x][y])
-        """
 
     #derecha            
     if tablero[x][y+1] != 5 and 4 > y+1:
@@ -169,7 +158,7 @@ def iaCosto(mononoke,x,y,contador):
 #Dibujar mononoke
 
 def dibujarMononoke():
-
+    contador = 0
     for i in range (len(tablero)):
         for j in range (len(tablero[i])):
             if tablero[i][j] == 1:
@@ -181,7 +170,7 @@ def dibujarMononoke():
                 mononoke.penup()
                 mononoke.setposition(posiciones[i][j])
                 mononoke.st()
-                iaCosto(mononoke,i,j,0)
+                iaCosto(mononoke,i,j,contador)
 
 def dibujarKodama():
 
