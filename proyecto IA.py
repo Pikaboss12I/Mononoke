@@ -4,7 +4,6 @@ import tkinter as tk
 import time
 from queue import PriorityQueue
 import sys
-
 contadorglobal = 0
 nodosglobal = 1
 limiteglobal = 0
@@ -73,6 +72,15 @@ def ancestros(arbol, elemento): #
         recorrido.append(nodo.elemento)
         ancestros(arbol, nodo.elemento)
 
+def ejecutarProfundidadPrimero(arbol, funcion):
+    funcion(arbol.elemento)
+    for hijo in arbol.hijos:
+        ejecutarProfundidadPrimero(hijo, funcion)
+
+def printElement(element):
+    print(element)
+
+
 #Matriz del laberinto
 #---------------
 #0 Casilla vacia
@@ -82,10 +90,11 @@ def ancestros(arbol, elemento): #
 #4 Rey
 #5 Pared
 
-tablero = [[4,5,0,2,0],
-           [0,0,0,5,0],
-           [5,5,5,0,0],
-           [1,0,3,0,2]]
+tablero = [[1,3,2,2,4],
+           [0,5,0,0,0],
+           [0,0,0,0,0],
+           [0,0,0,0,0]]
+
 
 posiciones = [[pos1,pos2,pos3,pos4,pos5],       #Matriz de posiciones que guarda las coordenadas de cada cuadro en el tablero
               [pos6,pos7,pos8,pos9,pos10],
@@ -104,15 +113,11 @@ screen.setup(1085,1000)
 screen.bgpic('fondo2.gif')
 
 # Mover
-def mover(tortuga,metodo):
+def mover(tortuga):
         
     for i in range(len(recorrido)):
-        if metodo == 1:
-            x = recorrido[len(recorrido)-1-i][1]
-            y = recorrido[len(recorrido)-1-i][2]
-        else:    
-            x = recorrido[len(recorrido)-1-i][0]
-            y = recorrido[len(recorrido)-1-i][1]
+        x = recorrido[len(recorrido)-1-i][0]
+        y = recorrido[len(recorrido)-1-i][1]
 
         tortuga.goto(posiciones[x][y])
         if tablero[x][y] == 3: #Mononoke se monta en Yakult
@@ -124,94 +129,85 @@ def mover(tortuga,metodo):
             meta = "meta.gif"
             screen.addshape(meta)
             tortuga.shape(meta)
-        time.sleep(1)   
     
 
 #ia Mononoke costo
-def iaCosto(mononoke,x,y,contador,costo,arbol):
-            
+def iaCosto(mononoke,x,y,costo,flag,limite,padre,arbol):
+    
     if tablero[x][y] == 4: #Comprueba si la posicion actual es meta
         #Se agrega la posición de meta al array de recorrido
-        recorrido.append((costo,x,y))
+        recorrido.append((x,y,limite,flag))
         #Llama la funcion ancestros 
-        ancestros(arbol,(costo,x,y))
-        mover(mononoke,1)
+        ancestros(arbol,(x,y,limite,flag))
+        mover(mononoke)
         tk.messagebox.showinfo(message="ENCONTRÓ LA META. COSTO TOTAL = "+ str(costo), title="FIN")
         return None
     
     #Paso por venado
     if tablero[x][y] == 3:
-        contador+=1 
-            
+        flag=1     
 
     #derecha  
     if y+1 <= 4:
         if tablero[x][y+1] != 5:
             #movimiento posible
-            if tablero[x][y+1] == 2 and contador<1:
-                costos.put((costo+2,x,y+1)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
-                agregarElemento(arbol,(costo+2,x,y+1),(costo,x,y))
-                
+            if tablero[x][y+1] == 2 and flag==0:
+                costos.put((costo+2,limite+1,x,y+1,flag)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
+                agregarElemento(arbol,(x,y+1,limite+1,flag),(x,y,limite,padre))
             else:
-                costos.put((costo+1,x,y+1))
-                agregarElemento(arbol,(costo+1,x,y+1),(costo,x,y))
-            #analizar 
+                costos.put((costo+1,limite+1,x,y+1,flag))
+                agregarElemento(arbol,(x,y+1,limite+1,flag),(x,y,limite,padre))
 
     #abajo  
-    if x+1 <= 3:          
+    if x+1 <= 3:   
         if tablero[x+1][y] != 5:
             #movimiento posible, agregue a la cola
-            if tablero[x+1][y] == 2 and contador<1:
-                costos.put((costo+2,x+1,y)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
-                agregarElemento(arbol,(costo+2,x+1,y),(costo,x,y)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
+            if tablero[x+1][y] == 2 and flag==0:
+                costos.put((costo+2,limite+1,x+1,y,flag)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
+                agregarElemento(arbol,(x+1,y,limite+1,flag),(x,y,limite,padre)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
             else:
-                costos.put((costo+1,x+1,y)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
-                agregarElemento(arbol,(costo+1,x+1,y),(costo,x,y))            
+                costos.put((costo+1,limite+1,x+1,y,flag)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y  
+                agregarElemento(arbol,(x+1,y,limite+1,flag),(x,y,limite,padre))
 
     #izquierda 
-    if y-1 >= 0:   
+    if y-1 >= 0:
         if tablero[x][y-1] != 5:
             #movimiento posible, agregue a la cola
-            if tablero[x][y-1] == 2 and contador<1:
-                costos.put((costo+2,x,y-1)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
-                agregarElemento(arbol,(costo+2,x,y-1),(costo,x,y)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
-            
+            if tablero[x][y-1] == 2 and flag==0:
+                costos.put((costo+2,limite+1,x,y-1,flag)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
+                agregarElemento(arbol,(x,y-1,limite+1,flag),(x,y,limite,padre)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
             else:
-                costos.put((costo+1,x,y-1)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
-                agregarElemento(arbol,(costo+1,x,y-1),(costo,x,y)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
+                costos.put((costo+1,limite+1,x,y-1,flag)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
+                agregarElemento(arbol,(x,y-1,limite+1,flag),(x,y,limite,padre)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
             
 
     #arriba
     if x-1 >= 0:
         if tablero[x-1][y] != 5:
             #movimiento posible, agregue a la cola
-            if tablero[x-1][y] == 2 and contador<1:
-                costos.put((costo+2,x-1,y)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
-                agregarElemento(arbol,(costo+2,x-1,y),(costo,x,y)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
-            
+            if tablero[x-1][y] == 2 and flag==0:
+                costos.put((costo+2,limite+1,x-1,y,flag)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
+                agregarElemento(arbol,(x-1,y,limite+1,flag),(x,y,limite,padre)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
             else:
-                costos.put((costo+1,x-1,y)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
-                agregarElemento(arbol,(costo+1,x-1,y),(costo,x,y)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
-            
+                costos.put((costo+1,limite+1,x-1,y,flag)) #Se agrega una tupla que tiene el costo de la casilla y las posiciones en X & Y
+                agregarElemento(arbol,(x-1,y,limite+1,flag),(x,y,limite,padre)) #Se agrega un hijo a este arbol, que tendrá como padre la pos actual
 
     #Se almacena la tupla con el mejor costo 
-    mejor = costos.get()  
+    mejor = costos.get()
     #Se hace una recursión ingresandole los valores en X & Y del mejor costo, y el valor de ese costo
-    iaCosto(mononoke,mejor[1],mejor[2],contador,mejor[0],arbol)
-    
+    iaCosto(mononoke,mejor[2],mejor[3],mejor[0],mejor[4],mejor[1],mejor[4],arbol)
+
 #Profundidad iterativa
 def iaIterativa(mononoke,x,y,con,flag,iterador,limite,padre,arbol):
 
     global contadorglobal,nodosglobal,limiteglobal,xglobal,yglobal
-
-    print("entre a comparación meta")
     if tablero[x][y] == 4: #Comprueba si la posicion actual es meta
         #Se agrega la posición de meta al array de recorrido
         flag=1
         recorrido.append((x,y,limiteglobal))
         #Llama la funcion ancestros 
         ancestros(arbol,(x,y,limiteglobal))
-        mover(mononoke,2)
+        mover(mononoke)
         tk.messagebox.showinfo(message="ENCONTRÓ LA META. El limite fue = "+ str(limiteglobal), title="FIN")
         return sys.exit()
 
@@ -219,105 +215,64 @@ def iaIterativa(mononoke,x,y,con,flag,iterador,limite,padre,arbol):
 
         con+=1
         #derecha
-        print("el contador:"+str(con)+"\n")
         if y+1 <= 4 and flag==0:
-            print("con limite "+str(padre))
-            print("posicion a ser analizada x:"+str(x)+" y:"+str(y+1))
             if tablero[x][y+1]!=5:
                 contadorglobal+=1
-                print("Pase por derecha con limite"+ str(limite)+"\n")
                 agregarElemento(arbol,(x,y+1,padre+1),(x,y,padre))
                 if iterador < limite:
-                    print(contadorglobal)
                     iaIterativa(mononoke,x,y+1,0,flag,iterador,limite-1,padre+1,arbol)
-            elif con==1 and 0!=limite:
+            elif con==1:
                 nodosglobal-=4**(limite-1)
-                print("cambie los nodos "+str(nodosglobal))
-        elif con==1 and 0!=limite:
+        elif con==1:
             nodosglobal-=4**(limite-1)
-            print("cambie los nodos "+str(nodosglobal))
         
         con+=1
         #abajo
-        print("el contador:"+str(con)+"\n")
         if x+1 <= 3 and flag==0:
-            print("con limite "+str(padre))
-            print("posicion a ser analizada x:"+str(x+1)+" y:"+str(y))
             if tablero[x+1][y]!=5:
                 contadorglobal+=1
-                print("Pase por abajo con limite"+ str(limite)+"\n")
                 agregarElemento(arbol,(x+1,y,padre+1),(x,y,padre))
                 if iterador < limite:
-                    print(contadorglobal)
                     iaIterativa(mononoke,x+1,y,0,flag,iterador,limite-1,padre+1,arbol)
-            elif con==2 and 0!=limite:
+            elif con==2:
                 nodosglobal-=4**(limite-1)
-                print("cambie los nodos "+str(nodosglobal))
-        elif con==2 and 0!=limite:
+        elif con==2:
             nodosglobal-=4**(limite-1)
-            print("cambie los nodos "+str(nodosglobal))
 
         con+=1
         #izquierda
-        print("el contador:"+str(con)+"\n")
         if y-1 >= 0 and flag==0:
-            print("con limite "+str(padre))
-            print("posicion a ser analizada x:"+str(x)+" y:"+str(y-1))
             if tablero[x][y-1]!=5:
                 contadorglobal+=1
-                print("Pase por izquierda con limite"+ str(limite)+"\n")
                 agregarElemento(arbol,(x,y-1,padre+1),(x,y,padre))
                 if iterador < limite:
-                    print(contadorglobal)
                     iaIterativa(mononoke,x,y-1,0,flag,iterador,limite-1,padre+1,arbol)
-            elif con==3 and 0!=limite:
+            elif con==3:
                 nodosglobal-=4**(limite-1)
-                print("cambie los nodos "+str(nodosglobal))
-        elif con==3 and 0!=limite:
+        elif con==3:
             nodosglobal-= (4**(limite-1))
-            print("cambie los nodos "+str(nodosglobal))
         
         con+=1
         #arriba
-        print("el contador:"+str(con)+"\n")
         if x-1 >= 0 and flag==0:
-            print("con limite "+str(padre))
-            print("posicion a ser analizada x:"+str(x-1)+" y:"+str(y))
             if tablero[x-1][y]!=5:
                 contadorglobal+=1
-                print("Pase por arriba con limite"+ str(limite)+"\n")
                 agregarElemento(arbol,(x-1,y,padre+1),(x,y,padre))
                 if iterador < limite:
-                    print(contadorglobal)
                     iaIterativa(mononoke,x-1,y,0,flag,iterador,limite-1,padre+1,arbol)
-            elif con==4 and 0!=limite:
+            elif con==4:
                 nodosglobal-=4**(limite-1)
-                print("cambie los nodos "+str(nodosglobal))
-        elif con==4 and 0!=limite:
+        elif con==4:
             nodosglobal-=4**(limite-1)
-            print("cambie los nodos "+str(nodosglobal))
 
-    print("-------")
-    print("soy bandera")    
-    print(flag)
-    print("soy contador")
-    print(contadorglobal)
-    print("soy nodos")
-    print(nodosglobal)
-    print("-------")
     if flag==0 and contadorglobal==nodosglobal-1:
-        print("tengo limite de "+str(limiteglobal))
-        print("-------")
         limiteglobal += 1
-        print("buscaré limite de "+str(limiteglobal))
         nodosglobal += 4 ** (limiteglobal)
-        print(nodosglobal)
         contadorglobal=0
         arbol = Arbol((xglobal,yglobal,0))
         iaIterativa(mononoke,xglobal,yglobal,0,flag,0,limiteglobal,0,arbol)
     else:
         return None
-    
 
 #Dibujar mononoke
 def dibujarMononoke(opc):
@@ -338,8 +293,8 @@ def dibujarMononoke(opc):
                 mononoke.st()
                 mononoke.speed(1)
                 if opc == 1: #Ejecuta el algoritmo por costos 
-                    tree = Arbol((0,xglobal,yglobal))   
-                    iaCosto(mononoke,xglobal,yglobal,contador,0,tree)
+                    tree = Arbol((xglobal,yglobal,0,0))
+                    iaCosto(mononoke,xglobal,yglobal,0,0,0,0,tree)
                 if opc == 2:
                     tree = Arbol((xglobal,yglobal,0))
                     iaIterativa(mononoke,xglobal,yglobal,0,0,0,0,tree.elemento,tree)
